@@ -1,0 +1,16 @@
+The max height of a skip list with 0 nodes is 1.
+The max height of a skip list with 1 nodes is 1.
+The max height of a skip list with 2 nodes is 2.
+The max height of a skip list with 3 nodes is 2.
+The max height of a skip list with 4 nodes is 3.
+The max height of a skip list with 5 nodes is 3.
+The max height of a skip list with 6 nodes is 3.
+The max height of a skip list with 7 nodes is 3.
+The max height of a skip list with 8 nodes is 3.
+The max height of a skip list with 9 nodes is 4.
+The max height of a skip list with 10 nodes is 4.
+The max height of a skip list with 11 nodes is 4.
+The max height of a skip list with 12 nodes is 4.
+The max height of a skip list with 13 nodes is 4.
+The max height of a skip list with 14 nodes is 4.
+The max height of a skip list with 15 nodes is 4.
