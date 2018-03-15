@@ -1,0 +1,20 @@
+@techreport{the-spraylist-a-scalable-relaxed-priority-queue,
+author = {Alistarh, Dan and Kopinsky, Justin and Li, Jerry and Shavit, Nir},
+title = {The SprayList: A Scalable Relaxed Priority Queue},
+booktitle = {},
+year = {2014},
+month = {September},
+abstract = {High-performance concurrent priority queues are essential for applications such as task scheduling and discrete event simulation. Unfortunately even the best performing implementations do not scale past a number of threads in the single
+digits. This is because of the sequential bottleneck in accessing the elements at the head of the queue in order to perform a DeleteMin operation.
+In this paper, we present the SprayList, a scalable priority queue with relaxed ordering semantics. Starting from a nonblocking SkipList, the main innovation behind our design is that the DeleteMin operations avoid a sequential bottleneck by “spraying” themselves onto the head of the SkipList list in a coordinated fashion. The spraying is implemented using a
+carefully designed random walk, so that DeleteMin always returns an element among the first O(p polylog p) in the list, where p is the number of threads. We prove that the expected running time of a DeleteMin operation is poly-logarithmic in p, independent of the size of the list, and also provide analytic upper bounds on the number of possible priority inversions for an element.
+Our experiments show that the relaxed semantics allow the data structure to scale for very high thread counts, comparable to a classic unordered SkipList. Furthermore, we observe that, for reasonably parallel workloads, the scalability benefits of relaxation considerably outweigh the additional work due to out-of-order execution.},
+publisher = {},
+url = {https://www.microsoft.com/en-us/research/publication/the-spraylist-a-scalable-relaxed-priority-queue/},
+address = {},
+pages = {},
+journal = {},
+volume = {},
+chapter = {},
+isbn = {},
+}
