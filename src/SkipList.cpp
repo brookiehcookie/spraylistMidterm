@@ -3,6 +3,9 @@
 #include <cmath>
 #include <atomic>
 
+#include <string>
+#include <functional>
+
 // Really quick down-and dirty boolean
 #define bool int
 #define true (1)
@@ -12,6 +15,17 @@
 #define maybe (rand()%2)
 
 using namespace std;
+
+#define MAX_LEVEL 15
+
+/**************************************************/
+
+/**
+	Very probably a really bad hash function
+*/
+uintptr_t hashy(void *p) {
+	return ((uintptr_t) p) >> 3;
+}
 
 /**************************************************/
 
@@ -40,7 +54,7 @@ public:
 	operator = (const AtomicMarkableReference &a);
 	T getRef() const;
 	bool isMarked() const;
-	bool get(bool &b) const;
+	T get(bool &b) const;
 	bool compareAndSet(T expectedValue, T newValue, bool expectedMark, bool newMark);
 	void set(T newValue, bool newMark);
 	bool attemptMark(T expectedValue, bool newMark);
@@ -77,7 +91,7 @@ bool AtomicMarkableReference<T>::isMarked() const {
 }
 
 template <class T>
-bool AtomicMarkableReference<T>::get(bool &b) const {
+T AtomicMarkableReference<T>::get(bool &b) const {
 	T p = this->ref.load();
 	b = (bool) ((uintptr_t) p & MARKED);
 	return b ? (T) ((uintptr_t)(p) & ~MARKED) : p;
@@ -112,33 +126,48 @@ bool AtomicMarkableReference<T>::attemptMark(T expectedValue, bool newMark) {
 template <typename T>
 class SkipListNode {
 public:
-	// The data this node currently holds
-	T data;
-	// The height of this node
-	int height;
-	// A vector of the next pointers
-	vector<SkipListNode*> next;
+	T *value;
+	int key;
+	int topLevel;
+	vector<AtomicMarkableReference<SkipListNode<T>*>*> next;
 
-	SkipListNode(int height);
+	SkipListNode(int _key);
+	SkipListNode(T *x, int height);
+
 	~SkipListNode();
-	SkipListNode<T> *getNext(int level);
-	void setNext(int level, SkipListNode *newNext);
-	void grow();
-	bool maybeGrow();
-	void trim(int height);
+	//SkipListNode<T> *getNext(int level);
+	//void setNext(int level, SkipListNode *newNext);
+	//void grow();
+	//bool maybeGrow();
+	//void trim(int height);
 };
 
 /**
-	SkipListNode constructor adapted from skipListNodeCreate
+	SkipListNode constructor for sentinel nodes
+	//SkipListNode constructor adapted from skipListNodeCreate
 */
 template <typename T>
-SkipListNode<T>::SkipListNode(int _height) {
-	height = _height;
-	// Setup next vector: reserve space for `height` pointers
-	next.reserve(height);
-	// Fill with NULL references
-	for (int i = 0; i < height; ++i)
-		next.assign(i, NULL);
+SkipListNode<T>::SkipListNode(int _key) {
+	value = NULL;
+	key = _key;
+	//next = new vector<AtomicMarkableReference<SkipListNode<T>*>>();
+	//next.reserve(MAX_LEVEL + 1);
+	//next = new AtomicMarkableReference<SkipListNode<T>>[MAX_LEVEL + 1];
+	for (int i = 0; i < MAX_LEVEL + 1; i++)
+		next.push_back(new AtomicMarkableReference<SkipListNode<T>*>(NULL, false));
+	topLevel = MAX_LEVEL;
+}
+
+/**
+	SkipListNode constructor for ordinary nodes
+*/
+template <typename T>
+SkipListNode<T>::SkipListNode(T *x, int height) {
+	value = x;
+	key = std::hash<T*>{}(x);
+	for (int i = 0; i < height; i++)
+		next.push_back(new AtomicMarkableReference<SkipListNode<T>*>(NULL, false));
+	topLevel = height;
 }
 
 /**
@@ -154,54 +183,54 @@ SkipListNode<T>::~SkipListNode() {
 	Has bounds checking (using vector.at)
 	Adapted from skipListNodeGetNext
 */
-template <typename T>
+/*template <typename T>
 SkipListNode<T> *SkipListNode<T>::getNext(int level) {
 	return next.at(level);
-}
+}*/
 
 /**
 	Set the next SkipListNode<T> at given level
 	Has bounds checking (using vector.assign)
 	Adapted from skipListNodeSetNext
 */
-template <typename T>
+/*template <typename T>
 void SkipListNode<T>::setNext(int level, SkipListNode<T> *newNext) {
 	next.assign(level, newNext);
-}
+}*/
 
 /**
 	Grow this node by one; set the new next pointer to null
 	Adapted from skipListNodeGrow
 */
-template <typename T>
+/*template <typename T>
 void SkipListNode<T>::grow() {
 	height++;
 	next.reserve(height);
 	next.assign(height - 1, NULL);
-}
+}*/
 
 /**
 	Randomly grow this node at 50% chance
 	Adapted from skipListMaybeGrow
 */
-template <typename T>
+/*template <typename T>
 bool SkipListNode<T>::maybeGrow() {
 	bool didGrow = rand() % 2;
 	if (didGrow)
 		this->grow();
 	return didGrow;
-}
+}*/
 
 /**
 	Trim this node to given height
 	This is a lot easier with C++ vectors than it is in C! :)
 	Adapted from skipListNodeTrim
 */
-template <typename T>
+/*template <typename T>
 void SkipListNode<T>::trim(int newHeight) {
 	height = newHeight;
 	next.resize(height);
-}
+}*/
 
 /**************************************************/
 
@@ -222,10 +251,11 @@ public:
 	~SkipList();
 	void init(int height);
 	int height();
-	void add(T data);
-	void addH(T data, int height);
-	bool contains(T data);
-	void remove(T data);
+	bool find(T x, SkipListNode<T> *preds[], SkipListNode<T> *succs[]);
+	bool add(T x);
+	bool addH(T x, int height);
+	bool contains(T x);
+	void remove(T x);
 	void grow();
 	void trim();
 	void print();
@@ -288,7 +318,30 @@ SkipList<T>::~SkipList () {
 */
 template <typename T>
 int SkipList<T>::height() {
-	return head->height;
+	return -1; //return head->height;
+}
+
+/**
+	The find algorithm
+*/
+template <typename T>
+bool SkipList<T>::find(T x, SkipListNode<T> *preds[], SkipListNode<T> *succs[]) {
+	int bottomLevel = 0;
+	int key = std::hash<T>{}(x);
+	bool marked[] = {false};
+	bool snip;
+	SkipListNode<T> *pred = NULL;
+	SkipListNode<T> *curr = NULL;
+	SkipListNode<T> *succ = NULL;
+	while (true) {
+		pred = head;
+		for (int level = MAX_LEVEL; level >= bottomLevel; level--) {
+			curr = pred->next.at(level)->getRef();
+			while (true) {
+				//succ = curr->next.at(level)->get(marked);
+			}
+		}
+	}
 }
 
 /**
@@ -296,8 +349,8 @@ int SkipList<T>::height() {
 	Adapted from skipListInsert
 */
 template <typename T>
-void SkipList<T>::add(T data) {
-	this->addH(data, SkipList<T>::generateRandomHeight(this->height()));
+bool SkipList<T>::add(T x) {
+	return this->addH(x, SkipList<T>::generateRandomHeight(this->height()));
 }
 
 /**
@@ -305,8 +358,24 @@ void SkipList<T>::add(T data) {
 	Adapted from skipListInsertH
 */
 template <typename T>
-void SkipList<T>::addH(T data, int height) {
+bool SkipList<T>::addH(T x, int height) {
 	// TODO: write (lock-free) SkipList insertion
+	int topLevel = height;
+	int bottomLevel = 0;
+	SkipListNode<T>* preds[MAX_LEVEL + 1];
+	SkipListNode<T>* succs[MAX_LEVEL + 1];
+	while (true) {
+		bool found = find(x, preds, succs);
+		if (found) {
+			return false;
+		} else {
+			/*SkipListNode<T> *newNode = new SkipListNode<T>(x, topLevel);
+			for (int level = bottomLevel; level <= topLevel; level++) {
+				SkipListNode<T> *succ = succs[level];
+				newNode.next[level].set(succ, false);
+			}*/
+		}
+	}
 }
 
 /**
@@ -363,11 +432,19 @@ void SkipList<T>::print() {
 */
 int main() {
 	SkipList<int> skippy;
+	SkipList<string> skippy2;
+	AtomicMarkableReference<SkipList<int>> amr;
+
+	amr.set(&skippy, false);
+
 	//cout << "A skiplist with 13 notes is of height " << SkipList<int>::getMaxHeight(13) << endl;
-	cout << "My SkipList is of height " << skippy.height() << endl;
-	skippy.add(1);
+	//cout << "My SkipList is of height " << skippy.height() << endl;
+	skippy.addH(1, 5);
 
 	cout << "Done" << endl;
+
+	cout << "Hash: " << hash<SkipList<int>*>{}(&skippy) << endl;
+	cout << "Hash2: " << hash<SkipList<string>*>{}(&skippy2) << endl;
 
 	return 0;
 }
