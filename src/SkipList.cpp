@@ -366,9 +366,17 @@ bool SkipList<T>::addH(T x, int height) {
 	SkipListNode<T>* succs[MAX_LEVEL + 1];
 	while (true) {
 		bool found = find(x, preds, succs);
-		if (found) {
+		if (found)
 			return false;
-		} else {
+		else 
+        {
+            SkipListNode<T>* newNode = SkipListNode(x, topLevel);
+            for(int level = bottomLevel; level <= topLevel; level++)
+            {
+                SkipListNode<T>* succ = succs[level];
+                newNode->next[level].set(succ, false)
+                SkipListNode<T> pred = preds[bottomLevel];
+            }
 			/*SkipListNode<T> *newNode = new SkipListNode<T>(x, topLevel);
 			for (int level = bottomLevel; level <= topLevel; level++) {
 				SkipListNode<T> *succ = succs[level];
@@ -376,6 +384,29 @@ bool SkipList<T>::addH(T x, int height) {
 			}*/
 		}
 	}
+        
+/*
+        if(!pred.next[bottomLevel].compareAndSet(succ, newNode, false,false)) // need equiv. in C++
+        {
+          continue;
+        }
+        for(int level = bottomLevel+1; level <= topLevel; level++)
+        {
+         while(true)
+         {
+           pred = preds[level];
+           succ = succ[level];
+           if(pred.next[level].compareAndSet(succ,newNode, false, false)) // need equiv in c++
+             break;
+           find(x, preds, succ); // need find method
+         }
+        }
+        return true;
+      }
+    }
+  }
+  ^ PSEUDO CODE
+  */ 
 }
 
 /**
