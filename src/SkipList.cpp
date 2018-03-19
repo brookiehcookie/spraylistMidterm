@@ -2,6 +2,7 @@
 #include <vector>
 #include <cmath>
 #include <atomic>
+#include <climits>
 
 #include <string>
 #include <functional>
@@ -16,7 +17,7 @@
 
 using namespace std;
 
-#define MAX_LEVEL 15
+#define MAX_LEVEL 6
 
 /**************************************************/
 
@@ -130,6 +131,7 @@ public:
 	int key;
 	int topLevel;
 	vector<AtomicMarkableReference<SkipListNode<T>*>*> next;
+	int flag = 0;
 
 	SkipListNode(int _key);
 	SkipListNode(T *x, int height);
@@ -140,6 +142,22 @@ public:
 	//void grow();
 	//bool maybeGrow();
 	//void trim(int height);
+
+	char print() {
+		if (flag == 1) {
+			cout << "HEAD";
+			return '\0';
+		}
+		if (flag == 2) {
+			cout << "TAIL";
+			return '\0';
+		}
+		if (value != NULL)
+			cout << *value;
+		else
+			cout << "null";
+		return '\0';
+	}
 };
 
 /**
@@ -164,7 +182,8 @@ SkipListNode<T>::SkipListNode(int _key) {
 template <typename T>
 SkipListNode<T>::SkipListNode(T *x, int height) {
 	value = x;
-	key = std::hash<T*>{}(x);
+	key = std::hash<T>{}(*x);
+	cout << "created node with value " << value << " and key " << key << endl;
 	for (int i = 0; i < height; i++)
 		next.push_back(new AtomicMarkableReference<SkipListNode<T>*>(NULL, false));
 	topLevel = height;
@@ -242,6 +261,7 @@ public:
 	// The head node of the SkipList (data is not meaningufl)
 	// The height of the head node is the height of the skip list.
 	SkipListNode<T> *head = NULL;
+	SkipListNode<T> *tail = NULL;
 
 	static int getMaxHeight(int size);
 	static int generateRandomHeight(int maxHeight);
@@ -282,7 +302,7 @@ int SkipList<T>::generateRandomHeight(int maxHeight) {
 */
 template <typename T>
 SkipList<T>::SkipList() {
-	this->init(1);
+	this->init(MAX_LEVEL);
 }
 
 /**
@@ -299,8 +319,18 @@ SkipList<T>::SkipList(int height) {
 */
 template <typename T>
 void SkipList<T>::init(int height) {
+	cout << "initialized with height = " << height << endl;
 	size = 0;
-	head = new SkipListNode<T>(height);
+	head = new SkipListNode<T>(height + 1);
+	head->value = NULL;
+	head->flag = 1;
+	head->key = INT_MIN;
+	tail = new SkipListNode<T>(height + 1);
+	tail->value = NULL;
+	tail->flag = 2;
+	tail->key = INT_MAX;
+	for (int level = 0; level < head->next.size(); level++)
+		head->next.at(level)->set(tail, false);
 }
 
 /**
@@ -308,7 +338,10 @@ void SkipList<T>::init(int height) {
 */
 template <typename T>
 SkipList<T>::~SkipList () {
-	// TODO: memory leaks with SkipListNode<T> head
+	// TODO: memory leaks with head and tail
+	//delete head;
+	//delete tail;
+	// probably also need to free all the other nodes
 }
 
 
@@ -318,7 +351,7 @@ SkipList<T>::~SkipList () {
 */
 template <typename T>
 int SkipList<T>::height() {
-	return -1; //return head->height;
+	return head->topLevel;
 }
 
 /**
@@ -328,19 +361,76 @@ template <typename T>
 bool SkipList<T>::find(T x, SkipListNode<T> *preds[], SkipListNode<T> *succs[]) {
 	int bottomLevel = 0;
 	int key = std::hash<T>{}(x);
+	cout << "searching for key: " << key << endl;
 	bool marked[] = {false};
 	bool snip;
 	SkipListNode<T> *pred = NULL;
 	SkipListNode<T> *curr = NULL;
 	SkipListNode<T> *succ = NULL;
+	cout << "starting find" << endl;
+	// retry
+	bool retry;
 	while (true) {
+		cout << "loop0" << endl;
+		retry = false;
 		pred = head;
-		for (int level = MAX_LEVEL; level >= bottomLevel; level--) {
+		for (int level = MAX_LEVEL - 1; level >= bottomLevel; level--) {
+			cout << "level = " << level << endl;
 			curr = pred->next.at(level)->getRef();
+
+			/*if (curr == NULL)
+				cout << "THINKING EMOJI" << endl;
+			if (curr->value == NULL)
+				cout << "curr->value is null" << endl;*/
+
 			while (true) {
-				//succ = curr->next.at(level)->get(marked);
+				cout << "loop1" << endl;
+				succ = curr->next.at(level)->get(*marked);
+
+				// Print state
+				if (pred != NULL)
+					cout << "pred: " << pred->print() << endl;
+				else
+					cout << "pred: NULL" << endl;
+
+				if (curr != NULL)
+					cout << "curr: " << curr->print() << endl;
+				else
+					cout << "curr: NULL" << endl;
+
+				if (succ != NULL)
+					cout << "succ: " << succ->print() << endl;
+				else
+					cout << "succ: NULL" << endl;
+
+
+				while (marked[0]) {
+					cout << "loop2" << endl;
+					snip = pred->next.at(level)->compareAndSet(curr, succ, false, false);
+					if (!snip) {
+						// jump to retry
+						cout << "retry" << endl;
+						retry = true;
+						break;
+					}
+					curr = pred->next.at(level)->getRef();
+					succ = curr->next.at(level)->get(*marked);
+				}
+				if (retry) break;
+				if (curr->key < key) {
+					cout << "move forward" << endl;
+					pred = curr; curr = succ;
+				} else {
+					break;
+				}
 			}
+			if (retry) break;
+			preds[level] = pred;
+			succs[level] = curr;
 		}
+		if (retry) continue;
+		cout << "making final comparison " << curr->key << " vs " << key << endl;
+		return curr->key == key;
 	}
 }
 
@@ -366,15 +456,16 @@ bool SkipList<T>::addH(T x, int height) {
 	SkipListNode<T>* succs[MAX_LEVEL + 1];
 	while (true) {
 		bool found = find(x, preds, succs);
-		if (found) {
+		return false;
+		/*if (found) {
 			return false;
 		} else {
-			/*SkipListNode<T> *newNode = new SkipListNode<T>(x, topLevel);
+			SkipListNode<T> *newNode = new SkipListNode<T>(x, topLevel);
 			for (int level = bottomLevel; level <= topLevel; level++) {
 				SkipListNode<T> *succ = succs[level];
 				newNode.next[level].set(succ, false);
-			}*/
-		}
+			}
+		}*/
 	}
 }
 
@@ -421,7 +512,29 @@ void SkipList<T>::trim() {
 */
 template <typename T>
 void SkipList<T>::print() {
-	// TODO: write (lock-free) SkipList print
+	int i;
+	SkipListNode<T> *nodey = head;
+	SkipListNode<T> *nodeyNext;
+	while (nodey != NULL) {
+		cout << nodey->print();
+		for (i = 0; i < nodey->topLevel; i++) {
+			cout << "\t";
+			nodeyNext = nodey->next.at(i)->getRef();
+			if (nodeyNext != NULL) {
+				/*if (nodeyNext->value != NULL) {
+					cout << "(" << *nodeyNext->value << ")";
+				} else {
+					cout << "(NULL)";
+				}*/
+				cout << '(' << nodeyNext->print() << ')';
+			} else {
+				cout << "NULL";
+			}
+		}
+		cout << endl;
+
+		nodey = nodey->next.at(0)->getRef();
+	}
 }
 
 
@@ -431,20 +544,62 @@ void SkipList<T>::print() {
 	Basic test driver for skip list stuff!
 */
 int main() {
-	SkipList<int> skippy;
-	SkipList<string> skippy2;
-	AtomicMarkableReference<SkipList<int>> amr;
+	SkipList<int> *skippy = new SkipList<int>();
 
-	amr.set(&skippy, false);
+	SkipListNode<int>* preds[MAX_LEVEL + 1];
+	SkipListNode<int>* succs[MAX_LEVEL + 1];
+	
+	//bool found = skippy.find(5, preds, succs);
 
-	//cout << "A skiplist with 13 notes is of height " << SkipList<int>::getMaxHeight(13) << endl;
-	//cout << "My SkipList is of height " << skippy.height() << endl;
-	skippy.addH(1, 5);
+	/*vector<AtomicMarkableReference<SkipListNode<int>*>*> next;
+	for (int i = 0; i < MAX_LEVEL + 1; i++)
+		next.push_back(new AtomicMarkableReference<SkipListNode<int>*>(NULL, false));
+	*/
+	
+	int valueA = 42;
+	int valueB = 69;
+	int valueC = 420;
 
-	cout << "Done" << endl;
+	SkipListNode<int> *nodeA = new SkipListNode<int>(&valueA, 1);
+	SkipListNode<int> *nodeB = new SkipListNode<int>(&valueB, 2);
+	SkipListNode<int> *nodeC = new SkipListNode<int>(&valueC, 3);
 
-	cout << "Hash: " << hash<SkipList<int>*>{}(&skippy) << endl;
-	cout << "Hash2: " << hash<SkipList<string>*>{}(&skippy2) << endl;
+	skippy->head->next.at(0)->set(nodeA, false);
+	skippy->head->next.at(1)->set(nodeB, false);
+	skippy->head->next.at(2)->set(nodeC, false);
+
+	nodeA->next.at(0)->set(nodeB, false);
+
+	nodeB->next.at(0)->set(nodeC, false);
+	nodeB->next.at(1)->set(nodeC, false);
+
+	nodeC->next.at(0)->set(skippy->tail, false);
+	nodeC->next.at(1)->set(skippy->tail, false);
+	nodeC->next.at(2)->set(skippy->tail, false);
+
+	cout << "Setup done" << endl;
+	skippy->print();
+	cout << "Finding" << endl;
+	int needle;
+	cin >> needle;
+	if (skippy->find(needle, preds, succs)) {
+		cout << "FOUND" << endl;
+	} else {
+		cout << "NOT found" << endl;
+	}
+
+	//SkipListNode<int> *nexty = nodeB->next.at(0)->get(marked);
+
+
+	/*
+	// Try to find 420
+	bool found = skippy->find(420, preds, succs);
+	if (found) {
+		cout << "FOUND!" << endl;
+	} else {
+		cout << "NOT found" << endl;
+	}*/
+
 
 	return 0;
 }
