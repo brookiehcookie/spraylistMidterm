@@ -4,6 +4,9 @@
 #include <atomic>
 #include <climits>
 
+#include <ctime>
+#include <cstdlib>
+
 #include <string>
 #include <functional>
 
@@ -17,7 +20,7 @@
 
 using namespace std;
 
-#define MAX_LEVEL 6
+#define MAX_LEVEL 8
 
 /**************************************************/
 
@@ -127,14 +130,14 @@ bool AtomicMarkableReference<T>::attemptMark(T expectedValue, bool newMark) {
 template <typename T>
 class SkipListNode {
 public:
-	T *value;
+	T value;
 	int key;
 	int topLevel;
 	vector<AtomicMarkableReference<SkipListNode<T>*>*> next;
 	int flag = 0;
 
 	SkipListNode(int _key);
-	SkipListNode(T *x, int height);
+	SkipListNode(T x, int height);
 
 	~SkipListNode();
 	//SkipListNode<T> *getNext(int level);
@@ -152,10 +155,11 @@ public:
 			cout << "TAIL";
 			return '\0';
 		}
-		if (value != NULL)
+		/*if (value != NULL)
 			cout << *value;
 		else
-			cout << "null";
+			cout << "null";*/
+		cout << value;
 		return '\0';
 	}
 };
@@ -166,7 +170,7 @@ public:
 */
 template <typename T>
 SkipListNode<T>::SkipListNode(int _key) {
-	value = NULL;
+	//value = NULL;
 	key = _key;
 	//next = new vector<AtomicMarkableReference<SkipListNode<T>*>>();
 	//next.reserve(MAX_LEVEL + 1);
@@ -180,11 +184,11 @@ SkipListNode<T>::SkipListNode(int _key) {
 	SkipListNode constructor for ordinary nodes
 */
 template <typename T>
-SkipListNode<T>::SkipListNode(T *x, int height) {
+SkipListNode<T>::SkipListNode(T x, int height) {
 	value = x;
-	key = std::hash<T>{}(*x);
-	cout << "created node with value " << value << " and key " << key << endl;
-	for (int i = 0; i < height; i++)
+	key = std::hash<T>{}(x);
+	//cout << "created node with value " << value << " and key " << key << " with height " << height << endl;
+	for (int i = 0; i < height + 1; i++)
 		next.push_back(new AtomicMarkableReference<SkipListNode<T>*>(NULL, false));
 	topLevel = height;
 }
@@ -293,6 +297,7 @@ int SkipList<T>::generateRandomHeight(int maxHeight) {
 	int h = 1;
 	while (rand() % 2 == 0 && h < maxHeight)
 		h++;
+	if (h == maxHeight) h--;
 	return h;
 }
 
@@ -322,11 +327,11 @@ void SkipList<T>::init(int height) {
 	cout << "initialized with height = " << height << endl;
 	size = 0;
 	head = new SkipListNode<T>(height + 1);
-	head->value = NULL;
+	//head->value = NULL;
 	head->flag = 1;
 	head->key = INT_MIN;
 	tail = new SkipListNode<T>(height + 1);
-	tail->value = NULL;
+	//tail->value = NULL;
 	tail->flag = 2;
 	tail->key = INT_MAX;
 	for (int level = 0; level < head->next.size(); level++)
@@ -361,21 +366,21 @@ template <typename T>
 bool SkipList<T>::find(T x, SkipListNode<T> *preds[], SkipListNode<T> *succs[]) {
 	int bottomLevel = 0;
 	int key = std::hash<T>{}(x);
-	cout << "searching for key: " << key << endl;
+	//cout << "searching for key: " << key << endl;
 	bool marked[] = {false};
 	bool snip;
 	SkipListNode<T> *pred = NULL;
 	SkipListNode<T> *curr = NULL;
 	SkipListNode<T> *succ = NULL;
-	cout << "starting find" << endl;
+	//cout << "starting find" << endl;
 	// retry
 	bool retry;
 	while (true) {
-		cout << "loop0" << endl;
+		//cout << "loop0" << endl;
 		retry = false;
 		pred = head;
 		for (int level = MAX_LEVEL - 1; level >= bottomLevel; level--) {
-			cout << "level = " << level << endl;
+			//cout << "level = " << level << endl;
 			curr = pred->next.at(level)->getRef();
 
 			/*if (curr == NULL)
@@ -384,11 +389,11 @@ bool SkipList<T>::find(T x, SkipListNode<T> *preds[], SkipListNode<T> *succs[]) 
 				cout << "curr->value is null" << endl;*/
 
 			while (true) {
-				cout << "loop1" << endl;
+				//cout << "loop1" << endl;
 				succ = curr->next.at(level)->get(*marked);
 
 				// Print state
-				if (pred != NULL)
+				/*if (pred != NULL)
 					cout << "pred: " << pred->print() << endl;
 				else
 					cout << "pred: NULL" << endl;
@@ -401,15 +406,15 @@ bool SkipList<T>::find(T x, SkipListNode<T> *preds[], SkipListNode<T> *succs[]) 
 				if (succ != NULL)
 					cout << "succ: " << succ->print() << endl;
 				else
-					cout << "succ: NULL" << endl;
+					cout << "succ: NULL" << endl;*/
 
 
 				while (marked[0]) {
-					cout << "loop2" << endl;
+					//cout << "loop2" << endl;
 					snip = pred->next.at(level)->compareAndSet(curr, succ, false, false);
 					if (!snip) {
 						// jump to retry
-						cout << "retry" << endl;
+						//cout << "retry" << endl;
 						retry = true;
 						break;
 					}
@@ -418,7 +423,7 @@ bool SkipList<T>::find(T x, SkipListNode<T> *preds[], SkipListNode<T> *succs[]) 
 				}
 				if (retry) break;
 				if (curr->key < key) {
-					cout << "move forward" << endl;
+					//cout << "move forward" << endl;
 					pred = curr; curr = succ;
 				} else {
 					break;
@@ -429,7 +434,7 @@ bool SkipList<T>::find(T x, SkipListNode<T> *preds[], SkipListNode<T> *succs[]) 
 			succs[level] = curr;
 		}
 		if (retry) continue;
-		cout << "making final comparison " << curr->key << " vs " << key << endl;
+		//cout << "making final comparison " << curr->key << " vs " << key << endl;
 		return curr->key == key;
 	}
 }
@@ -449,23 +454,39 @@ bool SkipList<T>::add(T x) {
 */
 template <typename T>
 bool SkipList<T>::addH(T x, int height) {
-	// TODO: write (lock-free) SkipList insertion
 	int topLevel = height;
 	int bottomLevel = 0;
-	SkipListNode<T>* preds[MAX_LEVEL + 1];
-	SkipListNode<T>* succs[MAX_LEVEL + 1];
+	SkipListNode<T> *preds[MAX_LEVEL + 1];
+	SkipListNode<T> *succs[MAX_LEVEL + 1];
 	while (true) {
 		bool found = find(x, preds, succs);
-		return false;
-		/*if (found) {
+		if (found) {
 			return false;
 		} else {
 			SkipListNode<T> *newNode = new SkipListNode<T>(x, topLevel);
 			for (int level = bottomLevel; level <= topLevel; level++) {
-				SkipListNode<T> *succ = succs[level];
-				newNode.next[level].set(succ, false);
+				newNode->next.at(level)->set(succs[level], false);
 			}
-		}*/
+			SkipListNode<T> *pred = preds[bottomLevel];
+			SkipListNode<T> *succ = succs[bottomLevel];
+			newNode->next.at(bottomLevel)->set(succ, false);
+			/*if (newNode->next.at(bottomLevel)->compareAndSet(succ, newNode, false, false)) {
+				continue;
+			}*/
+			if (!pred->next.at(bottomLevel)->compareAndSet(succ, newNode, false, false)) {
+				continue;
+			}
+			for (int level = bottomLevel+1; level <= topLevel; level++) {
+				while (true) {
+					pred = preds[level];
+					succ = succs[level];
+					if (pred->next.at(level)->compareAndSet(succ, newNode, false, false))
+						break;
+					find(x, preds, succs);
+				}
+			}
+			return true;
+		}
 	}
 }
 
@@ -474,7 +495,7 @@ bool SkipList<T>::addH(T x, int height) {
 	Adapted from skipListContains
 */
 template <typename T>
-bool SkipList<T>::contains(T data) {
+bool SkipList<T>::contains(T x) {
 	// TODO: write (lock-free) SkipList contains
 	return maybe;
 }
@@ -485,7 +506,7 @@ bool SkipList<T>::contains(T data) {
 	Adapted from skipListDelete
 */
 template <typename T>
-void SkipList<T>::remove(T data) {
+void SkipList<T>::remove(T x) {
 	// TODO: write (lock-free) SkipList removal
 	// To be eventually turned into a SprayList?
 	// Also consider logical deletion
@@ -544,11 +565,13 @@ void SkipList<T>::print() {
 	Basic test driver for skip list stuff!
 */
 int main() {
+	srand(time(NULL));
+
 	SkipList<int> *skippy = new SkipList<int>();
 
 	SkipListNode<int>* preds[MAX_LEVEL + 1];
 	SkipListNode<int>* succs[MAX_LEVEL + 1];
-	
+
 	//bool found = skippy.find(5, preds, succs);
 
 	/*vector<AtomicMarkableReference<SkipListNode<int>*>*> next;
@@ -556,13 +579,13 @@ int main() {
 		next.push_back(new AtomicMarkableReference<SkipListNode<int>*>(NULL, false));
 	*/
 	
-	int valueA = 42;
+	/*int valueA = 42;
 	int valueB = 69;
 	int valueC = 420;
 
-	SkipListNode<int> *nodeA = new SkipListNode<int>(&valueA, 1);
-	SkipListNode<int> *nodeB = new SkipListNode<int>(&valueB, 2);
-	SkipListNode<int> *nodeC = new SkipListNode<int>(&valueC, 3);
+	SkipListNode<int> *nodeA = new SkipListNode<int>(valueA, 1);
+	SkipListNode<int> *nodeB = new SkipListNode<int>(valueB, 2);
+	SkipListNode<int> *nodeC = new SkipListNode<int>(valueC, 3);
 
 	skippy->head->next.at(0)->set(nodeA, false);
 	skippy->head->next.at(1)->set(nodeB, false);
@@ -575,18 +598,21 @@ int main() {
 
 	nodeC->next.at(0)->set(skippy->tail, false);
 	nodeC->next.at(1)->set(skippy->tail, false);
-	nodeC->next.at(2)->set(skippy->tail, false);
+	nodeC->next.at(2)->set(skippy->tail, false);*/
 
 	cout << "Setup done" << endl;
 	skippy->print();
 	cout << "Finding" << endl;
-	int needle;
-	cin >> needle;
-	if (skippy->find(needle, preds, succs)) {
+	
+	for (int i = 1; i <= 32; i++)
+		skippy->add(rand()%1024);
+
+	skippy->print();
+	/*if (skippy->find(&needle, preds, succs)) {
 		cout << "FOUND" << endl;
 	} else {
 		cout << "NOT found" << endl;
-	}
+	}*/
 
 	//SkipListNode<int> *nexty = nodeB->next.at(0)->get(marked);
 
