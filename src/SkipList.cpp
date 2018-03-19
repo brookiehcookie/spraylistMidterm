@@ -279,7 +279,7 @@ public:
 	bool add(T x);
 	bool addH(T x, int height);
 	bool contains(T x);
-	void remove(T x);
+	bool remove(T x);
 	void grow();
 	void trim();
 	void print();
@@ -496,8 +496,29 @@ bool SkipList<T>::addH(T x, int height) {
 */
 template <typename T>
 bool SkipList<T>::contains(T x) {
-	// TODO: write (lock-free) SkipList contains
-	return maybe;
+	int bottomLevel = 0;
+	int key = std::hash<T>{}(x);
+	bool marked[] = {false};
+	SkipListNode<T> *pred = head;
+	SkipListNode<T> *curr = NULL;
+	SkipListNode<T> *succ = NULL;
+	for (int level = MAX_LEVEL; level >= bottomLevel; level--) {
+		curr = pred->next.at(level)->getRef();
+		while (true) {
+			succ = curr->next.at(level)->get(*marked);
+			while (marked[0]) {
+				curr = pred->next.at(level)->getRef();
+				succ = curr->next.at(level)->get(*marked);
+			}
+			if (curr->key < key) {
+				pred = curr;
+				curr = succ;
+			} else {
+				break;
+			}
+		}
+	}
+	return curr->key == key;
 }
 
 /**
@@ -506,10 +527,38 @@ bool SkipList<T>::contains(T x) {
 	Adapted from skipListDelete
 */
 template <typename T>
-void SkipList<T>::remove(T x) {
-	// TODO: write (lock-free) SkipList removal
-	// To be eventually turned into a SprayList?
-	// Also consider logical deletion
+bool SkipList<T>::remove(T x) {
+	int bottomLevel = 0;
+	SkipListNode<T> *preds[MAX_LEVEL + 1];
+	SkipListNode<T> *succs[MAX_LEVEL + 1];
+	SkipListNode<T> *succ;
+	while (true) {
+		bool found = find(x, preds, succs);
+		if (!found) {
+			return false;
+		} else {
+			SkipListNode<T> *nodeToRemove = succs[bottomLevel];
+			for (int level = nodeToRemove->topLevel; level >= bottomLevel+1; level--) {
+				bool marked[] = {false};
+				succ = nodeToRemove->next.at(level)->get(*marked);
+				while (!marked[0]) {
+					nodeToRemove->next.at(level)->attemptMark(succ, true);
+					succ = nodeToRemove->next.at(level)->get(*marked);
+				}
+			}
+			bool marked[] = {false};
+			succ = nodeToRemove->next.at(bottomLevel)->get(*marked);
+			while (true) {
+				bool iMarkedIt = nodeToRemove->next.at(bottomLevel)->compareAndSet(succ, succ, false, true);
+				succ = succs[bottomLevel]->next.at(bottomLevel)->get(*marked);
+				if (iMarkedIt) {
+					find(x, preds, succs);
+					return true;
+				}
+				else if (marked[0]) return false;
+			}
+		}
+	}
 }
 
 /**
@@ -604,9 +653,19 @@ int main() {
 	skippy->print();
 	cout << "Finding" << endl;
 	
-	for (int i = 1; i <= 32; i++)
+	for (int i = 1; i <= 16; i++)
 		skippy->add(rand()%1024);
 
+	skippy->print();
+
+	int needle;
+	cout << "Remove from this skiplist ";
+	cin >> needle;
+	if (skippy->remove(needle)) {
+		cout << "REMOVED" << endl;
+	} else {
+		cout << "NOT REMOVED" << endl;
+	}
 	skippy->print();
 	/*if (skippy->find(&needle, preds, succs)) {
 		cout << "FOUND" << endl;
