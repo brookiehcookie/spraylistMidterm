@@ -10,26 +10,16 @@
 #include <string>
 #include <functional>
 
+#include <pthread.h>
+
 // Really quick down-and dirty boolean
 #define bool int
 #define true (1)
 #define false (0)
 
-// Hey kids! Never do this in the real world!
-#define maybe (rand()%2)
-
 using namespace std;
 
-#define MAX_LEVEL 8
-
-/**************************************************/
-
-/**
-	Very probably a really bad hash function
-*/
-uintptr_t hashy(void *p) {
-	return ((uintptr_t) p) >> 3;
-}
+#define MAX_LEVEL 12
 
 /**************************************************/
 
@@ -140,11 +130,6 @@ public:
 	SkipListNode(T x, int height);
 
 	~SkipListNode();
-	//SkipListNode<T> *getNext(int level);
-	//void setNext(int level, SkipListNode *newNext);
-	//void grow();
-	//bool maybeGrow();
-	//void trim(int height);
 
 	char print() {
 		if (flag == 1) {
@@ -201,60 +186,6 @@ SkipListNode<T>::~SkipListNode() {
 	// TODO: memory leaks here WRT vector?
 }
 
-/**
-	Get the next SkipListNode<T> at given level
-	Has bounds checking (using vector.at)
-	Adapted from skipListNodeGetNext
-*/
-/*template <typename T>
-SkipListNode<T> *SkipListNode<T>::getNext(int level) {
-	return next.at(level);
-}*/
-
-/**
-	Set the next SkipListNode<T> at given level
-	Has bounds checking (using vector.assign)
-	Adapted from skipListNodeSetNext
-*/
-/*template <typename T>
-void SkipListNode<T>::setNext(int level, SkipListNode<T> *newNext) {
-	next.assign(level, newNext);
-}*/
-
-/**
-	Grow this node by one; set the new next pointer to null
-	Adapted from skipListNodeGrow
-*/
-/*template <typename T>
-void SkipListNode<T>::grow() {
-	height++;
-	next.reserve(height);
-	next.assign(height - 1, NULL);
-}*/
-
-/**
-	Randomly grow this node at 50% chance
-	Adapted from skipListMaybeGrow
-*/
-/*template <typename T>
-bool SkipListNode<T>::maybeGrow() {
-	bool didGrow = rand() % 2;
-	if (didGrow)
-		this->grow();
-	return didGrow;
-}*/
-
-/**
-	Trim this node to given height
-	This is a lot easier with C++ vectors than it is in C! :)
-	Adapted from skipListNodeTrim
-*/
-/*template <typename T>
-void SkipListNode<T>::trim(int newHeight) {
-	height = newHeight;
-	next.resize(height);
-}*/
-
 /**************************************************/
 
 template <typename T>
@@ -280,8 +211,6 @@ public:
 	bool addH(T x, int height);
 	bool contains(T x);
 	bool remove(T x);
-	void grow();
-	void trim();
 	void print();
 };
 
@@ -324,7 +253,6 @@ SkipList<T>::SkipList(int height) {
 */
 template <typename T>
 void SkipList<T>::init(int height) {
-	cout << "initialized with height = " << height << endl;
 	size = 0;
 	head = new SkipListNode<T>(height + 1);
 	//head->value = NULL;
@@ -366,55 +294,26 @@ template <typename T>
 bool SkipList<T>::find(T x, SkipListNode<T> *preds[], SkipListNode<T> *succs[]) {
 	int bottomLevel = 0;
 	int key = std::hash<T>{}(x);
-	//cout << "searching for key: " << key << endl;
 	bool marked[] = {false};
 	bool snip;
 	SkipListNode<T> *pred = NULL;
 	SkipListNode<T> *curr = NULL;
 	SkipListNode<T> *succ = NULL;
-	//cout << "starting find" << endl;
 	// retry
 	bool retry;
 	while (true) {
-		//cout << "loop0" << endl;
 		retry = false;
 		pred = head;
 		for (int level = MAX_LEVEL - 1; level >= bottomLevel; level--) {
-			//cout << "level = " << level << endl;
 			curr = pred->next.at(level)->getRef();
 
-			/*if (curr == NULL)
-				cout << "THINKING EMOJI" << endl;
-			if (curr->value == NULL)
-				cout << "curr->value is null" << endl;*/
-
 			while (true) {
-				//cout << "loop1" << endl;
 				succ = curr->next.at(level)->get(*marked);
-
-				// Print state
-				/*if (pred != NULL)
-					cout << "pred: " << pred->print() << endl;
-				else
-					cout << "pred: NULL" << endl;
-
-				if (curr != NULL)
-					cout << "curr: " << curr->print() << endl;
-				else
-					cout << "curr: NULL" << endl;
-
-				if (succ != NULL)
-					cout << "succ: " << succ->print() << endl;
-				else
-					cout << "succ: NULL" << endl;*/
 
 
 				while (marked[0]) {
-					//cout << "loop2" << endl;
 					snip = pred->next.at(level)->compareAndSet(curr, succ, false, false);
 					if (!snip) {
-						// jump to retry
-						//cout << "retry" << endl;
 						retry = true;
 						break;
 					}
@@ -423,7 +322,6 @@ bool SkipList<T>::find(T x, SkipListNode<T> *preds[], SkipListNode<T> *succs[]) 
 				}
 				if (retry) break;
 				if (curr->key < key) {
-					//cout << "move forward" << endl;
 					pred = curr; curr = succ;
 				} else {
 					break;
@@ -434,7 +332,6 @@ bool SkipList<T>::find(T x, SkipListNode<T> *preds[], SkipListNode<T> *succs[]) 
 			succs[level] = curr;
 		}
 		if (retry) continue;
-		//cout << "making final comparison " << curr->key << " vs " << key << endl;
 		return curr->key == key;
 	}
 }
@@ -470,9 +367,6 @@ bool SkipList<T>::addH(T x, int height) {
 			SkipListNode<T> *pred = preds[bottomLevel];
 			SkipListNode<T> *succ = succs[bottomLevel];
 			newNode->next.at(bottomLevel)->set(succ, false);
-			/*if (newNode->next.at(bottomLevel)->compareAndSet(succ, newNode, false, false)) {
-				continue;
-			}*/
 			if (!pred->next.at(bottomLevel)->compareAndSet(succ, newNode, false, false)) {
 				continue;
 			}
@@ -562,22 +456,6 @@ bool SkipList<T>::remove(T x) {
 }
 
 /**
-	Adapted from skipListGrow
-*/
-template <typename T>
-void SkipList<T>::grow() {
-	// TODO: write (lock-free) SkipList grow
-}
-
-/**
-	Adapted from skipListTrim
-*/
-template <typename T>
-void SkipList<T>::trim() {
-	// TODO: write (lock-free) SkipList trim
-}
-
-/**
 	Adapted from skipListPrint
 */
 template <typename T>
@@ -591,11 +469,6 @@ void SkipList<T>::print() {
 			cout << "\t";
 			nodeyNext = nodey->next.at(i)->getRef();
 			if (nodeyNext != NULL) {
-				/*if (nodeyNext->value != NULL) {
-					cout << "(" << *nodeyNext->value << ")";
-				} else {
-					cout << "(NULL)";
-				}*/
 				cout << '(' << nodeyNext->print() << ')';
 			} else {
 				cout << "NULL";
@@ -610,6 +483,77 @@ void SkipList<T>::print() {
 
 /**************************************************/
 
+#define THREADS_ADD 12
+#define THREADS_REMOVE 12
+#define NUMS_PER_THREAD 5000
+
+typedef struct thread_data {
+	int thread_id;
+	SkipList<int> *skippy;
+} thread_data;
+
+void *skipListAdd(void *threadarg) {
+	thread_data *my_data = (thread_data *) threadarg;
+	SkipList<int> *skippy = my_data->skippy;
+
+	// Generate nums from 0 to NUMS_PER_THREAD
+	int nums[NUMS_PER_THREAD];
+	for (int i = 0; i < NUMS_PER_THREAD; i++)
+		nums[i] = i*THREADS_ADD + my_data->thread_id + 1;
+	// Scramble
+	int temp, j;
+	for (int i = 0; i < NUMS_PER_THREAD; i++) {
+		j = rand() % NUMS_PER_THREAD;
+		temp = nums[i];
+		nums[i] = nums[j];
+		nums[j] = temp;
+	}
+
+	for (int i = 0; i < NUMS_PER_THREAD; i++) {
+		//cout << "add " << nums[i] << endl;
+		skippy->add(nums[i]);
+		cout << '#';
+	}
+
+	pthread_exit(NULL);
+}
+
+void *skipListRemove(void *threadarg) {
+	thread_data *my_data = (thread_data *) threadarg;
+	SkipList<int> *skippy = my_data->skippy;
+
+	// Generate nums from 0 to NUMS_PER_THREAD
+	int nums[NUMS_PER_THREAD];
+	for (int i = 0; i < NUMS_PER_THREAD; i++)
+		nums[i] = i + my_data->thread_id*NUMS_PER_THREAD + 1;
+	// Scramble
+	int temp, j;
+	for (int i = 0; i < NUMS_PER_THREAD; i++) {
+		j = rand() % NUMS_PER_THREAD;
+		temp = nums[i];
+		nums[i] = nums[j];
+		nums[j] = temp;
+	}
+
+	bool isRemoved[NUMS_PER_THREAD];
+	for (int i = 0; i < NUMS_PER_THREAD; i++)
+		isRemoved[i] = false;
+
+	int i = 0;
+	int count = 0;
+	while (count < NUMS_PER_THREAD) {
+		while (isRemoved[i]) i = ++i % NUMS_PER_THREAD;
+		if (skippy->remove(nums[i])) {
+			isRemoved[i] = true;
+			count++;
+			cout << ' ';
+		}
+		i++;
+	}
+
+	pthread_exit(NULL);
+}
+
 /**
 	Basic test driver for skip list stuff!
 */
@@ -618,74 +562,46 @@ int main() {
 
 	SkipList<int> *skippy = new SkipList<int>();
 
-	SkipListNode<int>* preds[MAX_LEVEL + 1];
-	SkipListNode<int>* succs[MAX_LEVEL + 1];
+	pthread_t threads_add[THREADS_ADD];
+	thread_data threadarg_add[THREADS_ADD];
 
-	//bool found = skippy.find(5, preds, succs);
 
-	/*vector<AtomicMarkableReference<SkipListNode<int>*>*> next;
-	for (int i = 0; i < MAX_LEVEL + 1; i++)
-		next.push_back(new AtomicMarkableReference<SkipListNode<int>*>(NULL, false));
-	*/
-	
-	/*int valueA = 42;
-	int valueB = 69;
-	int valueC = 420;
+	pthread_t threads_rem[THREADS_REMOVE];
+	thread_data threadarg_rem[THREADS_REMOVE];
 
-	SkipListNode<int> *nodeA = new SkipListNode<int>(valueA, 1);
-	SkipListNode<int> *nodeB = new SkipListNode<int>(valueB, 2);
-	SkipListNode<int> *nodeC = new SkipListNode<int>(valueC, 3);
+	int rc;
+	// Start add threads
+	for (int i = 0; i < THREADS_ADD; i++) {
+		threadarg_add[i].thread_id = i;
+		threadarg_add[i].skippy = skippy;
 
-	skippy->head->next.at(0)->set(nodeA, false);
-	skippy->head->next.at(1)->set(nodeB, false);
-	skippy->head->next.at(2)->set(nodeC, false);
-
-	nodeA->next.at(0)->set(nodeB, false);
-
-	nodeB->next.at(0)->set(nodeC, false);
-	nodeB->next.at(1)->set(nodeC, false);
-
-	nodeC->next.at(0)->set(skippy->tail, false);
-	nodeC->next.at(1)->set(skippy->tail, false);
-	nodeC->next.at(2)->set(skippy->tail, false);*/
-
-	cout << "Setup done" << endl;
-	skippy->print();
-	cout << "Finding" << endl;
-	
-	for (int i = 1; i <= 16; i++)
-		skippy->add(rand()%1024);
-
-	skippy->print();
-
-	int needle;
-	cout << "Remove from this skiplist ";
-	cin >> needle;
-	if (skippy->remove(needle)) {
-		cout << "REMOVED" << endl;
-	} else {
-		cout << "NOT REMOVED" << endl;
+		rc = pthread_create(&threads_add[i], NULL, skipListAdd, (void*) &threadarg_add[i]);
+		if (rc) {
+			cout << "Unable to create thread " << rc << endl;
+			exit(1);
+		}
 	}
+	// Start remove threads
+	for (int i = 0; i < THREADS_REMOVE; i++) {
+		threadarg_rem[i].thread_id = i;
+		threadarg_rem[i].skippy = skippy;
+
+		rc = pthread_create(&threads_rem[i], NULL, skipListRemove, (void*) &threadarg_rem[i]);
+		if (rc) {
+			cout << "Unable to create thread " << rc << endl;
+			exit(1);
+		}
+	}
+
+	for (int i = 0; i < THREADS_ADD; i++) {
+		pthread_join(threads_add[i], NULL);
+	}
+	//cout << "All add threads complete" << endl;
+	for (int i = 0; i < THREADS_REMOVE; i++) {
+		pthread_join(threads_rem[i], NULL);
+	}
+	cout << endl;
 	skippy->print();
-	/*if (skippy->find(&needle, preds, succs)) {
-		cout << "FOUND" << endl;
-	} else {
-		cout << "NOT found" << endl;
-	}*/
-
-	//SkipListNode<int> *nexty = nodeB->next.at(0)->get(marked);
-
-
-	/*
-	// Try to find 420
-	bool found = skippy->find(420, preds, succs);
-	if (found) {
-		cout << "FOUND!" << endl;
-	} else {
-		cout << "NOT found" << endl;
-	}*/
-
 
 	return 0;
 }
-
