@@ -1,1 +1,5 @@
-This is Team 2's group repo.
+This repository contains an implementation of wait-free lock-free skip list in C++.
+
+We use an AtomicMarkableReference class which is similar to the class from Java's atomic package. It is essentially a pointer with boolean flag that can be used atomically. It uses an atomic<uintptr_t>. Since the pointers we are using are word-aligned, the two least significant bits are always 0. We use the least significant bit as the marking bit.
+
+We implement the concurrent skip list as described in our textbook, The Art of Multiprocessor Programming by Herlihy/Shavit.
