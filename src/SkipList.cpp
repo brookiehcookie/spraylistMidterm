@@ -6,6 +6,7 @@
 #include <ctime>
 #include <cstdlib>
 #include <string>
+#include <random>
 #include <functional>
 
 #include <pthread.h>
@@ -211,19 +212,31 @@ public:
 	bool remove(T x);
 	void print();
 	int getWalkLength(int threadCount);
-	int Spray(int beginHeight, int walkLength, int descendAmount);
+	T spray(int beginHeight, int walkLength, int descendAmount);
 	
 };
 
 template <typename T>
-int SkipList<T>::Spray(int beginHeight, int walkLength, int descendAmount) {
-	SkipListNode<T> *node;
+T SkipList<T>::spray(int beginHeight, int walkLength, int descendAmount) {
+	SkipListNode<T> *node = head;
+	SkipListNode<T> *next;
 	node = head;
-	int level = begin;
-	
-	while(level >= 0){
-	
+	int level = beginHeight;
+	int jumps;
+
+	while (level >= 0) {
+		//vector<AtomicMarkableReference<SkipListNode<T>*>*> next;
+		jumps = this->getWalkLength(walkLength);
+		cout << "level = " << level << ", jumps = " << jumps << endl;
+		for (; jumps >= 0; jumps--) {
+			next = node->next.at(level)->getRef();
+			if (next != NULL) {
+				node = next;
+		}
+		level -= descendAmount;
 	}
+
+	return node->value;
 }
 
 template <typename T>
@@ -235,9 +248,13 @@ int SkipList<T>::getMaxHeight(int size) {
 
 template <typename T>
 int SkipList<T>::getWalkLength(int threadCount) {
-	int logOfThreads = floor(log(threadCount));
-	int maxWalk = pow(logOfThreads,3);
-	
+    int logOfThreads = floor(log(threadCount));
+    int maxWalk = pow(logOfThreads,3);
+    uniform_int_distribution<> *randomNumber = new uniform_int_distribution<>(0,maxWalk);
+    //cout << "maxwalk = " << maxWalk << endl;
+    random_device d;//TODO is this ok
+    return (*randomNumber)(d);
+    //int randomChoice
 }
 
 template <typename T>
@@ -573,10 +590,30 @@ void *skipListRemove(void *threadarg) {
 	pthread_exit(NULL);
 }
 
+int main() {
+	int i, v;
+	srand(time(NULL));
+
+	SkipList<int> *skippy = new SkipList<int>();
+
+	for (i = 0; i < 10; i++) {
+		skippy->add(i);
+	}
+	skippy->print();
+
+	//int beginHeight, int walkLength, int descendAmount
+	cout << skippy->spray(skippy->height(), 1, 1);
+	return 0;
+	/*for (i = 0; i < 10; i++) {
+		v = skippy->spray();
+		cout << v << ' ';
+	}*/
+}
+
 /**
 	Basic test driver for skip list stuff!
 */
-int main() {
+int main2() {
 	srand(time(NULL));
 
 	SkipList<int> *skippy = new SkipList<int>();
