@@ -421,7 +421,7 @@ The SprayList is linearizable partially due to the fact that it is composed of a
 \section {Synchronization Techniques}
 
 
-C++ does not have Atomic Markable References like Java does. Due to this, our team created an AtomicMarkableReference class in order to promote synchronization throughout the threads. This was implemented through using the C++ atomic<uintptr_t> and setting the least-significant-bit of this atomic pointer to be the mark for the reference.
+\verb!C++! does not have Atomic Markable References like Java does. Due to this, our team created an AtomicMarkableReference class in order to promote synchronization throughout the threads. This was implemented through using the \verb!C++! atomic \verb!<!uintptr_t \textgreater and setting the least-significant-bit of this atomic pointer to be the mark for the reference.
 
 
 To assist with synchronization, there a variety of linearization points throughout the SprayList [1]. These points correlate to those of a lock-free SkipList, whose methods make up the majority of the SprayList.
@@ -470,7 +470,6 @@ Can we think of ways to improve the design of the datastructure? If so, attempt 
 tests go here
 
 \section{Transactional SprayList Implementation}
-DETAILS GO HERE
 
 \section{Conclusion}
 
