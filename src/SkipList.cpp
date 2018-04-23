@@ -3,10 +3,8 @@
 #include <cmath>
 #include <atomic>
 #include <climits>
-
 #include <ctime>
 #include <cstdlib>
-
 #include <string>
 #include <functional>
 
@@ -20,7 +18,7 @@
 using namespace std;
 
 #define MAX_LEVEL 12
-
+const int LEVELS_TO_DESCEND = 1;
 /**************************************************/
 
 /**
@@ -212,13 +210,34 @@ public:
 	bool contains(T x);
 	bool remove(T x);
 	void print();
+	int getWalkLength(int threadCount);
+	int Spray(int beginHeight, int walkLength, int descendAmount);
+	
 };
+
+template <typename T>
+int SkipList<T>::Spray(int beginHeight, int walkLength, int descendAmount) {
+	SkipListNode<T> *node;
+	node = head;
+	int level = begin;
+	
+	while(level >= 0){
+	
+	}
+}
 
 template <typename T>
 int SkipList<T>::getMaxHeight(int size) {
 	if (size == 0)
 		return 1;
 	return 1 + log(size) / log(2);
+}
+
+template <typename T>
+int SkipList<T>::getWalkLength(int threadCount) {
+	int logOfThreads = floor(log(threadCount));
+	int maxWalk = pow(logOfThreads,3);
+	
 }
 
 template <typename T>
