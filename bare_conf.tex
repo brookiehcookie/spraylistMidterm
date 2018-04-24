@@ -155,177 +155,15 @@
 
 
 
-
-
-% *** MATH PACKAGES ***
-%
-%\usepackage{amsmath}
-% A popular package from the American Mathematical Society that provides
-% many useful and powerful commands for dealing with mathematics.
-%
-% Note that the amsmath package sets \interdisplaylinepenalty to 10000
-% thus preventing page breaks from occurring within multiline equations. Use:
-%\interdisplaylinepenalty=2500
-% after loading amsmath to restore such page breaks as IEEEtran.cls normally
-% does. amsmath.sty is already installed on most LaTeX systems. The latest
-% version and documentation can be obtained at:
-% http://www.ctan.org/pkg/amsmath
-
-
-
-
-
-% *** SPECIALIZED LIST PACKAGES ***
-%
-%\usepackage{algorithmic}
-% algorithmic.sty was written by Peter Williams and Rogerio Brito.
-% This package provides an algorithmic environment fo describing algorithms.
-% You can use the algorithmic environment in-text or within a figure
-% environment to provide for a floating algorithm. Do NOT use the algorithm
-% floating environment provided by algorithm.sty (by the same authors) or
-% algorithm2e.sty (by Christophe Fiorio) as the IEEE does not use dedicated
-% algorithm float types and packages that provide these will not provide
-% correct IEEE style captions. The latest version and documentation of
-% algorithmic.sty can be obtained at:
-% http://www.ctan.org/pkg/algorithms
-% Also of interest may be the (relatively newer and more customizable)
-% algorithmicx.sty package by Szasz Janos:
-% http://www.ctan.org/pkg/algorithmicx
-
-
-
-
-% *** ALIGNMENT PACKAGES ***
-%
-%\usepackage{array}
-% Frank Mittelbach's and David Carlisle's array.sty patches and improves
-% the standard LaTeX2e array and tabular environments to provide better
-% appearance and additional user controls. As the default LaTeX2e table
-% generation code is lacking to the point of almost being broken with
-% respect to the quality of the end results, all users are strongly
-% advised to use an enhanced (at the very least that provided by array.sty)
-% set of table tools. array.sty is already installed on most systems. The
-% latest version and documentation can be obtained at:
-% http://www.ctan.org/pkg/array
-
-
-% IEEEtran contains the IEEEeqnarray family of commands that can be used to
-% generate multiline equations as well as matrices, tables, etc., of high
-% quality.
-
-
-
-
-% *** SUBFIGURE PACKAGES ***
-%\ifCLASSOPTIONcompsoc
-%  \usepackage[caption=false,font=normalsize,labelfont=sf,textfont=sf]{subfig}
-%\else
-%  \usepackage[caption=false,font=footnotesize]{subfig}
-%\fi
-% subfig.sty, written by Steven Douglas Cochran, is the modern replacement
-% for subfigure.sty, the latter of which is no longer maintained and is
-% incompatible with some LaTeX packages including fixltx2e. However,
-% subfig.sty requires and automatically loads Axel Sommerfeldt's caption.sty
-% which will override IEEEtran.cls' handling of captions and this will result
-% in non-IEEE style figure/table captions. To prevent this problem, be sure
-% and invoke subfig.sty's "caption=false" package option (available since
-% subfig.sty version 1.3, 2005/06/28) as this is will preserve IEEEtran.cls
-% handling of captions.
-% Note that the Computer Society format requires a larger sans serif font
-% than the serif footnote size font used in traditional IEEE formatting
-% and thus the need to invoke different subfig.sty package options depending
-% on whether compsoc mode has been enabled.
-%
-% The latest version and documentation of subfig.sty can be obtained at:
-% http://www.ctan.org/pkg/subfig
-
-
-
-
-% *** FLOAT PACKAGES ***
-%
-%\usepackage{fixltx2e}
-% fixltx2e, the successor to the earlier fix2col.sty, was written by
-% Frank Mittelbach and David Carlisle. This package corrects a few problems
-% in the LaTeX2e kernel, the most notable of which is that in current
-% LaTeX2e releases, the ordering of single and double column floats is not
-% guaranteed to be preserved. Thus, an unpatched LaTeX2e can allow a
-% single column figure to be placed prior to an earlier double column
-% figure.
-% Be aware that LaTeX2e kernels dated 2015 and later have fixltx2e.sty's
-% corrections already built into the system in which case a warning will
-% be issued if an attempt is made to load fixltx2e.sty as it is no longer
-% needed.
-% The latest version and documentation can be found at:
-% http://www.ctan.org/pkg/fixltx2e
-
-
-%\usepackage{stfloats}
-% stfloats.sty was written by Sigitas Tolusis. This package gives LaTeX2e
-% the ability to do double column floats at the bottom of the page as well
-% as the top. (e.g., "\begin{figure*}[!b]" is not normally possible in
-% LaTeX2e). It also provides a command:
-%\fnbelowfloat
-% to enable the placement of footnotes below bottom floats (the standard
-% LaTeX2e kernel puts them above bottom floats). This is an invasive package
-% which rewrites many portions of the LaTeX2e float routines. It may not work
-% with other packages that modify the LaTeX2e float routines. The latest
-% version and documentation can be obtained at:
-% http://www.ctan.org/pkg/stfloats
-% Do not use the stfloats baselinefloat ability as the IEEE does not allow
-% \baselineskip to stretch. Authors submitting work to the IEEE should note
-% that the IEEE rarely uses double column equations and that authors should try
-% to avoid such use. Do not be tempted to use the cuted.sty or midfloat.sty
-% packages (also by Sigitas Tolusis) as the IEEE does not format its papers in
-% such ways.
-% Do not attempt to use stfloats with fixltx2e as they are incompatible.
-% Instead, use Morten Hogholm'a dblfloatfix which combines the features
-% of both fixltx2e and stfloats:
-%
-% \usepackage{dblfloatfix}
-% The latest version can be found at:
-% http://www.ctan.org/pkg/dblfloatfix
-
-
-
-
-% *** PDF, URL AND HYPERLINK PACKAGES ***
-%
-%\usepackage{url}
-% url.sty was written by Donald Arseneau. It provides better support for
-% handling and breaking URLs. url.sty is already installed on most LaTeX
-% systems. The latest version and documentation can be obtained at:
-% http://www.ctan.org/pkg/url
-% Basically, \url{my_url_here}.
-
-
-
-
-% *** Do not adjust lengths that control margins, column widths, etc. ***
-% *** Do not use packages that alter fonts (such as pslatex).         ***
-% There should be no need to do such things with IEEEtran.cls V1.6 and later.
-% (Unless specifically asked to do so by the journal or conference you plan
-% to submit to, of course. )
-
-
 % correct bad hyphenation here
 \hyphenation{op-tical net-works semi-conduc-tor}
 
 
 \begin{document}
-%
-% paper title
-% Titles are generally capitalized except for words such as a, an, and, as,
-% at, but, by, for, in, nor, of, on, or, the, to and up, which are usually
-% not capitalized unless they are the first or last word of the title.
-% Linebreaks \\ can be used within to get better formatting as desired.
-% Do not put math or special symbols in the title.
+
 \title{Implementing a SprayList}
 
 
-% author names and affiliations
-% use a multiple column layout for up to three different
-% affiliations
 \author{\IEEEauthorblockN{Brooke Cochenour}
 \IEEEauthorblockA{University of Central Florida Student}
 \and
@@ -334,34 +172,6 @@
 \and
 \IEEEauthorblockN{Harrison Geiger}
 \IEEEauthorblockA{University of Central Florida Student}}
-
-% conference papers do not typically use \thanks and this command
-% is locked out in conference mode. If really needed, such as for
-% the acknowledgment of grants, issue a \IEEEoverridecommandlockouts
-% after \documentclass
-
-% for over three affiliations, or if they all won't fit within the width
-% of the page, use this alternative format:
-% 
-%\author{\IEEEauthorblockN{Michael Shell\IEEEauthorrefmark{1},
-%Homer Simpson\IEEEauthorrefmark{2},
-%James Kirk\IEEEauthorrefmark{3}, 
-%Montgomery Scott\IEEEauthorrefmark{3} and
-%Eldon Tyrell\IEEEauthorrefmark{4}}
-%\IEEEauthorblockA{\IEEEauthorrefmark{1}School of Electrical and Computer Engineering\\
-%Georgia Institute of Technology,
-%Atlanta, Georgia 30332--0250\\ Email: see http://www.michaelshell.org/contact.html}
-%\IEEEauthorblockA{\IEEEauthorrefmark{2}Twentieth Century Fox, Springfield, USA\\
-%Email: homer@thesimpsons.com}
-%\IEEEauthorblockA{\IEEEauthorrefmark{3}Starfleet Academy, San Francisco, California 96678-2391\\
-%Telephone: (800) 555--1212, Fax: (888) 555--1212}
-%\IEEEauthorblockA{\IEEEauthorrefmark{4}Tyrell Inc., 123 Replicant Street, Los Angeles, California 90210--4321}}
-
-
-
-
-% use for special paper notices
-%\IEEEspecialpapernotice{(Invited Paper)}
 
 
 
@@ -372,180 +182,82 @@
 % As a general rule, do not put math, special symbols or citations
 % in the abstract
 \begin{abstract}
-The SprayList is a scalable relaxed priority queue with a SkipList foundation that does not have the same restrictions as alternative algorithms when it comes to scalability.  The SprayList is designed to be able to handle a high number of threads, unlike its alternative algorithms . Following the research paper written by Nir Shavit et. al. The SprayList: A Scalable Relaxed Priority Queue, we have created an implementation of the SprayList in C++. This research paper provided a variety of pseudocode, proofs, and testing results that assisted with creating our implementation of the SprayList. We approached this implementation through first constructing a lock-free SkipList. After the SkipList was fully functioning, we began to implement the additional optimizations that improve upon the scalability of the SprayList. To date, we have done minimal coding and testing. Moving forward, we will conduct more testing and continue coding our implementation of the SprayList introduced by Shavit et. al.
+The SprayList is a scalable relaxed priority queue with a SkipList foundation that does not have the same restrictions as alternative algorithms when it comes to scalability.  The SprayList is designed to be able to handle a high number of threads, unlike its alternative algorithms . Following the research paper written by Nir Shavit et. al. The SprayList: A Scalable Relaxed Priority Queue, we have created an implementation of the SprayList in C++. This research paper provided a variety of pseudocode, proofs, and testing results that assisted with creating our implementation of the SprayList. We approached this implementation through first constructing a lock-free SkipList. After the SkipList was fully functioning, we began to implement the additional optimizations that improve upon the scalability of the SprayList. Our team implemented two different versions of the SprayList: concurrent and transactional. In this paper you will find more in depth detail about each implementation version, how they compare to alternatives, and their optimizations following the SprayList guidelines first introduced by Shavit et. al.
 \end{abstract}
 
-% no keywords
-
-
-
-
-% For peer review papers, you can put extra information on the cover
-% page as needed:
-% \ifCLASSOPTIONpeerreview
-% \begin{center} \bfseries EDICS Category: 3-BBND \end{center}
-% \fi
-%
-% For peerreview papers, this IEEEtran command inserts a page break and
-% creates the second title. It will be ignored for other modes.
 \IEEEpeerreviewmaketitle
 
 
 
 \section{SprayList’s Purpose}
-% no \IEEEPARstart
 
-% You must have at least 2 lines in the paragraph with the drop letter
-% (should never be an issue)
 The purpose of the SprayList is to provide an algorithm that does not have the sequential bottleneck of capping the number of threads to single digit numbers like alternative algorithms do [1]. In some instances, a FIFO queue is not strictly necessary as for many use cases, the highest priority element in a priority queue is not needed. The SprayList algorithm allows for a random range of the high-priority nodes to be removed.
 
 Shavit et al. explains that existing algorithms (at least, at the time) with stricter rules have issues of high contention and, as mentioned above, low scalability [2]. This algorithm alleviates this[2].
 
-\section{SkipList Algorithms}
+\section{General Design Decisions}
+Our code implementation is intended to follow the design laid out by  “The SprayList…”. by Shavit et. al. The authors themselves also reference The Art of Multiprocessor Programming by Maurice Herlihy and Nir Shavit [2], which we found of use. 
 
-Four implemented functions that can be found in our code are the add (adding a value into the skiplist), remove(remove a node - note that this method is called delete in  The Art of Multiprocessor Programming), find, and contains (check if a node exists) functions [2]. These 4 algorithms are present in the The Art of Multiprocessor Programming as pseudocode and combined offer essential functionality for SkipList traversal.
-
-\section{Conclusion}
-
-To conclude, a SprayList is a scalable relaxed priority queue with a SkipList foundation that does not have the same restrictions as alternative algorithms when it comes to scalability.  Its purpose is to provide an algorithm that does not have the sequential bottleneck of capping the number of threads to single digit numbers like alternative algorithms do [1]. Through the use of C++, we have implemented a functioning SkipList, which is the foundation of a SprayList. Next, we will be implementing the optimization methods which make up the SprayList.
+The authors explain that their algorithm is Skip-List based;  naturally, we too implemented a form of a SkipList.  As a reference, we followed pseudocode from The Art of Multiprocessor Programming associated with a few different SkipList implementations [2].  We chose C++ as there are many advantages to writing concurrent code using C++ such as the ability to create templates that have been very helpful throughout the implementation of the SkipList foundation for the SprayList.
 
 
+\section{Progress Guarantees}
+SprayLists provide several progress guarantees. SprayLists are lock-free and because of this deadlocks should not happen if the SprayList has been correctly implemented [1]. This keeps each thread progressing and making progress towards its assigned task.  Another progress guarantee SprayLists provide is the fact that, according to the author, the data structure has a starvation-free design when it comes to nodes that have higher priorities [1]. This means that nodes of higher priority will not starve those of lower priority allowing each node to make progress towards it goal [1]. SprayList are also said to be wait-free,which is another factor that assists in keeping threads making progress towards completing their goals. 
+
+\section {Correctness Condition}
+
+SprayList was not designed to resemble a strict FIFO queue, however, even though it does not emulate a FIFO queue it is very similar in a variety of ways such as the way that it comes close to dequing the first node inserted before the ones inserted after that first node, however, this is not always the case [1]. The SprayList algorithm “guarantees an even selection among the first polylog p elements in the SkipList” [1].
 
 
-% An example of a floating figure using the graphicx package.
-% Note that \label must occur AFTER (or within) \caption.
-% For figures, \caption should occur after the \includegraphics.
-% Note that IEEEtran v1.7 and later has special internal code that
-% is designed to preserve the operation of \label within \caption
-% even when the captionsoff option is in effect. However, because
-% of issues like this, it may be the safest practice to put all your
-% \label just after \caption rather than within \caption{}.
-%
-% Reminder: the "draftcls" or "draftclsnofoot", not "draft", class
-% option should be used if it is desired that the figures are to be
-% displayed while in draft mode.
-%
-%\begin{figure}[!t]
-%\centering
-%\includegraphics[width=2.5in]{myfigure}
-% where an .eps filename suffix will be assumed under latex, 
-% and a .pdf suffix will be assumed for pdflatex; or what has been declared
-% via \DeclareGraphicsExtensions.
-%\caption{Simulation results for the network.}
-%\label{fig_sim}
-%\end{figure}
-
-% Note that the IEEE typically puts floats only at the top, even when this
-% results in a large percentage of a column being occupied by floats.
+The SprayList is linearizable partially due to the fact that it is composed of a lock-free SkipList [1]. The linearizability points match those of the lock-free SkipList that makes up the SprayList.
 
 
-% An example of a double column floating figure using two subfigures.
-% (The subfig.sty package must be loaded for this to work.)
-% The subfigure \label commands are set within each subfloat command,
-% and the \label for the overall figure must come after \caption.
-% \hfil is used as a separator to get equal spacing.
-% Watch out that the combined width of all the subfigures on a 
-% line do not exceed the text width or a line break will occur.
-%
-%\begin{figure*}[!t]
-%\centering
-%\subfloat[Case I]{\includegraphics[width=2.5in]{box}%
-%\label{fig_first_case}}
-%\hfil
-%\subfloat[Case II]{\includegraphics[width=2.5in]{box}%
-%\label{fig_second_case}}
-%\caption{Simulation results for the network.}
-%\label{fig_sim}
-%\end{figure*}
-%
-% Note that often IEEE papers with subfigures do not employ subfigure
-% captions (using the optional argument to \subfloat[]), but instead will
-% reference/describe all of them (a), (b), etc., within the main caption.
-% Be aware that for subfig.sty to generate the (a), (b), etc., subfigure
-% labels, the optional argument to \subfloat must be present. If a
-% subcaption is not desired, just leave its contents blank,
-% e.g., \subfloat[].
+\section {Synchronization Techniques}
+
+C++  does not have Atomic Markable References like Java does. Due to this, our team created an AtomicMarkableReference class in order to promote synchronization throughout the threads. This was implemented through using the C++ atomic atomic of type uintptr\_t  and setting the least-significant-bit of this atomic pointer to be the mark for the reference.
 
 
-% An example of a floating table. Note that, for IEEE style tables, the
-% \caption command should come BEFORE the table and, given that table
-% captions serve much like titles, are usually capitalized except for words
-% such as a, an, and, as, at, but, by, for, in, nor, of, on, or, the, to
-% and up, which are usually not capitalized unless they are the first or
-% last word of the caption. Table text will default to \footnotesize as
-% the IEEE normally uses this smaller font for tables.
-% The \label must come after \caption as always.
-%
-%\begin{table}[!t]
-%% increase table row spacing, adjust to taste
-%\renewcommand{\arraystretch}{1.3}
-% if using array.sty, it might be a good idea to tweak the value of
-% \extrarowheight as needed to properly center the text within the cells
-%\caption{An Example of a Table}
-%\label{table_example}
-%\centering
-%% Some packages, such as MDW tools, offer better commands for making tables
-%% than the plain LaTeX2e tabular which is used here.
-%\begin{tabular}{|c||c|}
-%\hline
-%One & Two\\
-%\hline
-%Three & Four\\
-%\hline
-%\end{tabular}
-%\end{table}
+To assist with synchronization, there a variety of linearization points throughout the SprayList [1]. These points correlate to those of a lock-free SkipList, whose methods make up the majority of the SprayList.
+
+\section {SkipList Algorithms}
+
+our implemented functions that can be found in our code are the add (adding a value into the skiplist), remove(remove a node - note that this method is called delete in The Art of Multiprocessor Programming), find, and contains (check if a node exists) functions [2]. These 4 algorithms are present in the The Art of Multiprocessor Programming as pseudocode and combined offer essential functionality for SkipList traversal.
 
 
-% Note that the IEEE does not put floats in the very first column
-% - or typically anywhere on the first page for that matter. Also,
-% in-text middle ("here") positioning is typically not used, but it
-% is allowed and encouraged for Computer Society conferences (but
-% not Computer Society journals). Most IEEE journals/conferences use
-% top floats exclusively. 
-% Note that, LaTeX2e, unlike IEEE journals/conferences, places
-% footnotes above bottom floats. This can be corrected via the
-% \fnbelowfloat command of the stfloats package.
+\section {SprayList Versus Alternatives}
+
+There are many advantages of using spraylist versus its alternatives. To start, There are a variety of experiments that show that the SprayList data structure has a highly scalable thread count due to relaxed semantic [1]. This is important because its alternatives, such as an unordered skiplist, do not have this kind of scalability and are limited to single digit thread numbers performance wise. SprayList uses a DELETE\_MIN method that is very innovative and allows the SprayList to past the sequential bottleneck of alternatives [1]. This sequential bottleneck, for alternatives, keeps threads from scaling pass a max number in the single digits [1]. However, through the innovation demonstrated in the SprayList DELETE\_MIN method where the method “returns an element among the first p log\textsuperscript{3}p nodes in the list where p is the number of threads” this is not an issue as the runtime is independent of the list size and the sequential bottleneck of alternative data structures can be surpassed [1]. There are many implementations of alternative data structures that have attempted to eliminate or reduce the bottleneck that comes from the DELETE\_MIN operation, however, with the reductions came a multitude of compare and swaps which lead to the alternatives not being able to handle high-contention workloads with a high thread count [1]. An example of such an alternative, would be Lindén and Jonsson’s implementation of a SkipList, their implementation successfully reduced the bottle neck of the DELETE\_MIN operation, however, the compare and swap operations that were used to reduce said bottleneck resulted in high contention. 
+
+According to Nir Shavit et. al, SprayLists can provide “fully scalable throughput for up to 80 concurrent threads under high-contention workloads”, while competing alternative data structures “suffer from very high contention under a standard workload” [1]. The alternative data structures suffer due to the fact threads are still completing frequently for critical sections which places a limit on the amount of workload the threads can deal with along with the amount of threads that the data structure can support [1]. 
+
+There are alternative implementations of data structures, such as the implementation of the lock-free priority queue by Wimmer et. al., which has a better system for semantics than the SprayList [1].. However, these type of alternatives come with a synchronization cost which is much higher than that of the SprayList [1]. While the SprayList may not have the best way to handle ordering semantics, it does not have the synchronization cost that many of those alternatives present [1].
+
+Another advantage of the SprayList data structure is the fact that it can provide “probabilistic guarantees on the relative priority of returned elements, and on the running time of operations.” [1]. Due to these guarantees, the SprayList set apart from its alternatives who can not always guarantee the running time of an operation. 
+
+\section{SprayList Optimizations}
+There are a variety of optimizations the SprayList provides that help improve the overall performance of the data structure.
+
+\subsection{Padding}
+
+Padding is used in a SprayList in order to ensure that the first couple of elements present in the list are not treated unfairly [1]. The padding happens in the beginning of the skiplist where K(p) dummy entries are placed where p is the number of threads [1].
+
+\subsection{Cleaners}
+Cleaners in SprayList are considered a way to optimize the data structure as they are not needed in a SprayList implementation, however, can prove to be very useful [1]. In order for cleaners to perform their jobs, there first must be threads who become cleaners. The threads who become cleaners are decided through a coin flip (1/p) where p is the number of threads [1]. If the coin flip is successful and a thread has become a cleaner, there are several jobs a cleaner is responsible for. To start off, a cleaner searches the bottom-level list of a SkipList linearly in order to find a key it needs to acquire so that it can execute the lock-free version of DELETE\_MIN implementation by Lotan-Shavit [1]. The next job a cleaner thread is responsible for is adjusting pointers to nodes that have already been acquired previously by the spray operations of the SprayList.
+
+\subsection{Contention Adaptation}
+
+The SprayList, based on the contention level, will allow threads to adjust spray parameters dynamically [1]. This is an important optimization as it allows a thread to estimate the number of threads needed and then if contention is detected to be higher than what the thread had previously estimated, the thread can then increase its estimated number of threads in order to accommodate the greater contention [1]. While this sort of adaptation to contention can optimize performance greatly, when implemented, it will dequeue an element with the smallest key if there is only a single thread accessing the SprayList [1].
 
 
 
 
-
-% conference papers do not normally have an appendix
-
-
-% use section* for acknowledgment
-
-
-
-% trigger a \newpage just before the given reference
-% number - used to balance the columns on the last page
-% adjust value as needed - may need to be readjusted if
-% the document is modified later
-%\IEEEtriggeratref{8}
-% The "triggered" command can be changed if desired:
-%\IEEEtriggercmd{\enlargethispage{-5in}}
-
-% references section
-
-% can use a bibliography generated by BibTeX as a .bbl file
-% BibTeX documentation can be easily obtained at:
-% http://mirror.ctan.org/biblio/bibtex/contrib/doc/
-% The IEEEtran BibTeX style support page is at:
-% http://www.michaelshell.org/tex/ieeetran/bibtex/
-%\bibliographystyle{IEEEtran}
-% argument is your BibTeX string definitions and bibliography database(s)
-%\bibliography{IEEEabrv,../bib/paper}
-%
-% <OR> manually copy in the resultant .bbl file
-% set second argument of \begin to the number of references
-% (used to reserve space for the reference number labels box)
 \begin{thebibliography}{1}
 	
 
 
 \bibitem{IEEEhowto:kopka}
 Herlihy, Maurice and Shavit, Nir, \emph{The Art of Multiprocessor Programming}\hskip 1em plus
-  0.5em minus 0.4em\relax San Francisco, CA, USA: Morgan Kaufmann Publishers Inc., 2008.
+  0.5em minus 0.4em\relax San Francisco, CA, USA: Morgan Kaufmann Publishers Inc., 2008. SHOULD BE RESEARCH PAPER
   
 \bibitem{IEEEhowto:kopka}
 Herlihy, Maurice and Shavit, Nir, \emph{The Art of Multiprocessor Programming}\hskip 1em plus
