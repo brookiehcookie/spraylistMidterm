@@ -9,6 +9,10 @@
 #include <random>
 #include <functional>
 
+// for performance testing
+#include <iomanip>
+#include <chrono>
+
 #include <pthread.h>
 
 // Really quick down-and dirty boolean
@@ -211,33 +215,7 @@ public:
 	bool contains(T x);
 	bool remove(T x);
 	void print();
-	int getWalkLength(int threadCount);
-	T spray(int beginHeight, int walkLength, int descendAmount);
-	
 };
-
-template <typename T>
-T SkipList<T>::spray(int beginHeight, int walkLength, int descendAmount) {
-	SkipListNode<T> *node = head;
-	SkipListNode<T> *next;
-	node = head;
-	int level = beginHeight;
-	int jumps;
-
-	while (level >= 0) {
-		//vector<AtomicMarkableReference<SkipListNode<T>*>*> next;
-		jumps = this->getWalkLength(walkLength);
-		cout << "level = " << level << ", jumps = " << jumps << endl;
-		for (; jumps >= 0; jumps--) {
-			next = node->next.at(level)->getRef();
-			if (next != NULL) {
-				node = next;
-		}
-		level -= descendAmount;
-	}
-
-	return node->value;
-}
 
 template <typename T>
 int SkipList<T>::getMaxHeight(int size) {
@@ -246,17 +224,13 @@ int SkipList<T>::getMaxHeight(int size) {
 	return 1 + log(size) / log(2);
 }
 
-template <typename T>
-int SkipList<T>::getWalkLength(int threadCount) {
-    int logOfThreads = floor(log(threadCount));
-    int maxWalk = pow(logOfThreads,3);
-    uniform_int_distribution<> *randomNumber = new uniform_int_distribution<>(0,maxWalk);
-    //cout << "maxwalk = " << maxWalk << endl;
-    random_device d;//TODO is this ok
-    return (*randomNumber)(d);
-    //int randomChoice
-}
-
+/**
+	Generate a random max height for a node
+	50% chance of 1
+	25% chance of 2
+	12.5% chance of 3
+	etc, with a given cap
+*/
 template <typename T>
 int SkipList<T>::generateRandomHeight(int maxHeight) {
 	int h = 1;
@@ -266,7 +240,7 @@ int SkipList<T>::generateRandomHeight(int maxHeight) {
 	return h;
 }
 
-/*
+/**
 	Constructor for SkipList
 	Adapted from skipLsitCreate
 */
@@ -519,6 +493,52 @@ void SkipList<T>::print() {
 
 /**************************************************/
 
+template <typename T>
+class SprayList : public SkipList<T> {
+public:
+	T spray(int beginHeight, int walkLength, int descendAmount);
+};
+
+/**
+	An implementation of the spray algorithm
+*/
+template <typename T>
+T SprayList<T>::spray(int beginHeight, int walkLength, int descendAmount) {
+	SkipListNode<T> *node = this->head;
+	SkipListNode<T> *next;
+	int level = beginHeight;
+	int jumps;
+
+	// Simulate a random walk
+	// Continue until we bottom-out of the skip list
+	while (level >= 0) {
+		// Decide on some random number of jumps
+		jumps = rand() % (walkLength + 1);
+		// Make the jumps so long as we don't hit the tail
+		for (; jumps >= 0; jumps--) {
+			next = node->next.at(level)->getRef();
+			if (next != NULL && next != this->tail) {
+				node = next;
+			}
+		}
+		// Descend
+		level -= descendAmount;
+	}
+
+	return node->value;
+}
+
+
+/**************************************************/
+/**
+	Skip List Testing
+
+	In this section of code, we define functions that test
+	the capabilities of the SkipList<T> class. This was used
+	to verify that our implementation of a current skip list
+	was functioning properly.
+*/
+
 #define THREADS_ADD 12
 #define THREADS_REMOVE 12
 #define NUMS_PER_THREAD 5000
@@ -528,7 +548,7 @@ typedef struct thread_data {
 	SkipList<int> *skippy;
 } thread_data;
 
-void *skipListAdd(void *threadarg) {
+void *skipListAddThread(void *threadarg) {
 	thread_data *my_data = (thread_data *) threadarg;
 	SkipList<int> *skippy = my_data->skippy;
 
@@ -554,7 +574,7 @@ void *skipListAdd(void *threadarg) {
 	pthread_exit(NULL);
 }
 
-void *skipListRemove(void *threadarg) {
+void *skipListRemoveThread(void *threadarg) {
 	thread_data *my_data = (thread_data *) threadarg;
 	SkipList<int> *skippy = my_data->skippy;
 
@@ -590,30 +610,11 @@ void *skipListRemove(void *threadarg) {
 	pthread_exit(NULL);
 }
 
-int main() {
-	int i, v;
-	srand(time(NULL));
-
-	SkipList<int> *skippy = new SkipList<int>();
-
-	for (i = 0; i < 10; i++) {
-		skippy->add(i);
-	}
-	skippy->print();
-
-	//int beginHeight, int walkLength, int descendAmount
-	cout << skippy->spray(skippy->height(), 1, 1);
-	return 0;
-	/*for (i = 0; i < 10; i++) {
-		v = skippy->spray();
-		cout << v << ' ';
-	}*/
-}
-
 /**
-	Basic test driver for skip list stuff!
+	Test the SkipList class by creating some adding and removing
+	threads. THREADS_ADD will 
 */
-int main2() {
+void testSkipList() {
 	srand(time(NULL));
 
 	SkipList<int> *skippy = new SkipList<int>();
@@ -631,7 +632,7 @@ int main2() {
 		threadarg_add[i].thread_id = i;
 		threadarg_add[i].skippy = skippy;
 
-		rc = pthread_create(&threads_add[i], NULL, skipListAdd, (void*) &threadarg_add[i]);
+		rc = pthread_create(&threads_add[i], NULL, skipListAddThread, (void*) &threadarg_add[i]);
 		if (rc) {
 			cout << "Unable to create thread " << rc << endl;
 			exit(1);
@@ -642,7 +643,7 @@ int main2() {
 		threadarg_rem[i].thread_id = i;
 		threadarg_rem[i].skippy = skippy;
 
-		rc = pthread_create(&threads_rem[i], NULL, skipListRemove, (void*) &threadarg_rem[i]);
+		rc = pthread_create(&threads_rem[i], NULL, skipListRemoveThread, (void*) &threadarg_rem[i]);
 		if (rc) {
 			cout << "Unable to create thread " << rc << endl;
 			exit(1);
@@ -658,6 +659,182 @@ int main2() {
 	}
 	cout << endl;
 	skippy->print();
+}
 
+/**************************************************/
+/*
+	SprayList performance testing
+*/
+#define SPRAYLIST_THREADS_ADD 16
+#define SPRAYLIST_THREADS_REMOVE 16
+#define SPRAYLIST_NUMS_PER_THREAD 12500
+
+typedef struct thread_data2 {
+	int thread_id;
+	long result = 0;
+	SprayList<int> *skippy;
+} thread_data2;
+
+void *sprayListAddThread(void *threadarg) {
+	thread_data2 *my_data = (thread_data2 *) threadarg;
+	SprayList<int> *skippy = my_data->skippy;
+
+	// Generate nums from 0 to SPRAYLIST_NUMS_PER_THREAD
+	int nums[SPRAYLIST_NUMS_PER_THREAD];
+	for (int i = 0; i < SPRAYLIST_NUMS_PER_THREAD; i++)
+		nums[i] = i*SPRAYLIST_THREADS_ADD + my_data->thread_id + 1;
+	// Scramble
+	int temp, j;
+	for (int i = 0; i < SPRAYLIST_NUMS_PER_THREAD; i++) {
+		j = rand() % SPRAYLIST_NUMS_PER_THREAD;
+		temp = nums[i];
+		nums[i] = nums[j];
+		nums[j] = temp;
+	}
+
+	long sum = 0;
+	for (int i = 0; i < SPRAYLIST_NUMS_PER_THREAD; i++) {
+		//cout << "add " << nums[i] << endl;
+		skippy->add(nums[i]);
+		sum += nums[i];
+		//cout << '#';
+	}
+	my_data->result = sum;
+
+	pthread_exit(NULL);
+}
+
+void *sprayListRemoveThread(void *threadarg) {
+	thread_data2 *my_data = (thread_data2 *) threadarg;
+	SprayList<int> *skippy = my_data->skippy;
+
+	int sum = 0;
+	for (int i = 0; i < SPRAYLIST_NUMS_PER_THREAD; i++) {
+		int v;
+		do {
+			v = skippy->spray(3, 2, 1);
+		} while (!skippy->remove(v));
+		//cout << ' ';
+		sum += v;
+	}
+	my_data->result = sum;
+
+	pthread_exit(NULL);
+}
+
+void testSprayPerformance() {
+	srand(time(NULL));
+
+	SprayList<int> *skippy = new SprayList<int>();
+
+	pthread_t threads_add[SPRAYLIST_THREADS_ADD];
+	thread_data2 threadarg_add[SPRAYLIST_THREADS_ADD];
+
+	pthread_t threads_rem[SPRAYLIST_THREADS_REMOVE];
+	thread_data2 threadarg_rem[SPRAYLIST_THREADS_REMOVE];
+
+	// START TIMER
+	std::clock_t c_start = std::clock();
+	auto t_start = std::chrono::high_resolution_clock::now();
+
+	int rc;
+	// Start add threads
+	for (int i = 0; i < SPRAYLIST_THREADS_ADD; i++) {
+		threadarg_add[i].thread_id = i;
+		threadarg_add[i].skippy = skippy;
+		threadarg_add[i].result = 0;
+
+		rc = pthread_create(&threads_add[i], NULL, sprayListAddThread, (void*) &threadarg_add[i]);
+		if (rc) {
+			cout << "Unable to create thread " << rc << endl;
+			exit(1);
+		}
+	}
+	// Start remove threads
+	for (int i = 0; i < SPRAYLIST_THREADS_REMOVE; i++) {
+		threadarg_rem[i].thread_id = i;
+		threadarg_rem[i].skippy = skippy;
+		threadarg_rem[i].result = 0;
+
+		rc = pthread_create(&threads_rem[i], NULL, sprayListRemoveThread, (void*) &threadarg_rem[i]);
+		if (rc) {
+			cout << "Unable to create thread " << rc << endl;
+			exit(1);
+		}
+	}
+
+	for (int i = 0; i < THREADS_ADD; i++) {
+		pthread_join(threads_add[i], NULL);
+	}
+	//cout << "All add threads complete" << endl;
+	for (int i = 0; i < THREADS_REMOVE; i++) {
+		pthread_join(threads_rem[i], NULL);
+	}
+
+	// STOP TIMER
+	std::clock_t c_end = std::clock();
+	auto t_end = std::chrono::high_resolution_clock::now();
+ 
+	std::cout << std::fixed << std::setprecision(5) << "CPU time used: "
+			  << 1000.0 * (c_end-c_start) / CLOCKS_PER_SEC << " ms\n"
+			  << "Wall clock time passed: "
+			  << std::chrono::duration<double, std::milli>(t_end-t_start).count()
+			  << " ms\n";
+
+	// Get the sum of each remove thread's sum
+	long sumAdd = 0;
+	for (int i = 0; i < SPRAYLIST_THREADS_REMOVE; i++) {
+		sumAdd += threadarg_add[i].result;
+	}
+	long sumRem = 0;
+	for (int i = 0; i < SPRAYLIST_THREADS_REMOVE; i++) {
+		sumRem += threadarg_rem[i].result;
+	}
+	// sumAdd and sumRem are the sums of all the numbers that the threads
+	// added or removed. If both are the same, then we know we added/removed
+	// the same numbers
+	cout << "added: " << sumAdd << endl;
+	cout << "removed: " << sumRem << endl;
+}
+
+/**************************************************/
+
+#define NUM 20
+
+void testSpray() {
+	int i, v;
+	int counts[NUM] = {0};
+
+	SprayList<int> *skippy = new SprayList<int>();
+
+	for (i = 0; i < NUM; i++) {
+		skippy->add(i);
+	}
+	skippy->print();
+
+	//cout << skippy->spray(skippy->height(), 1, 1);
+	for (i = 0; i < 100000; i++) {
+		v = skippy->spray(3, 2, 1);
+		//cout << "->" << v << endl;
+		counts[v]++;
+	}
+
+	cout << "counts:" << endl;
+	for (i = 0; i < NUM; i++) {
+		if (counts[i] > 0)
+			cout << " " << i << ":\t" << counts[i] << endl;
+	}
+}
+
+void testSpray2() {
+
+}
+
+
+/**************************************************/
+
+int main(void) {
+	srand(time(NULL));
+	testSprayPerformance();
 	return 0;
 }
